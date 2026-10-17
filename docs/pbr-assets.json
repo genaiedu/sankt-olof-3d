@@ -1,0 +1,74 @@
+[
+  {
+    "asset": "white_plaster_02",
+    "type": "diff",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/white_plaster_02/white_plaster_02_diff_1k.jpg",
+    "path": "blender/textures/white_plaster_02_diff.jpg"
+  },
+  {
+    "asset": "white_plaster_02",
+    "type": "nor_gl",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/white_plaster_02/white_plaster_02_nor_gl_1k.jpg",
+    "path": "blender/textures/white_plaster_02_nor_gl.jpg"
+  },
+  {
+    "asset": "white_plaster_02",
+    "type": "rough",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/white_plaster_02/white_plaster_02_rough_1k.jpg",
+    "path": "blender/textures/white_plaster_02_rough.jpg"
+  },
+  {
+    "asset": "clay_roof_tiles",
+    "type": "diff",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/clay_roof_tiles/clay_roof_tiles_diff_1k.jpg",
+    "path": "blender/textures/clay_roof_tiles_diff.jpg"
+  },
+  {
+    "asset": "clay_roof_tiles",
+    "type": "nor_gl",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/clay_roof_tiles/clay_roof_tiles_nor_gl_1k.jpg",
+    "path": "blender/textures/clay_roof_tiles_nor_gl.jpg"
+  },
+  {
+    "asset": "clay_roof_tiles",
+    "type": "rough",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/clay_roof_tiles/clay_roof_tiles_rough_1k.jpg",
+    "path": "blender/textures/clay_roof_tiles_rough.jpg"
+  },
+  {
+    "asset": "grass_ground",
+    "type": "diff",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground/grass_ground_diff_1k.jpg",
+    "path": "blender/textures/grass_ground_diff.jpg"
+  },
+  {
+    "asset": "grass_ground",
+    "type": "nor_gl",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground/grass_ground_nor_gl_1k.jpg",
+    "path": "blender/textures/grass_ground_nor_gl.jpg"
+  },
+  {
+    "asset": "grass_ground",
+    "type": "rough",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground/grass_ground_rough_1k.jpg",
+    "path": "blender/textures/grass_ground_rough.jpg"
+  },
+  {
+    "asset": "kloofendal_48d_partly_cloudy_puresky",
+    "type": "hdr",
+    "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/kloofendal_48d_partly_cloudy_puresky_1k.hdr",
+    "path": "public/assets/textures/daylight.hdr"
+  },
+  {
+    "asset": "brick_floor_02",
+    "type": "diff",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brick_floor_02/brick_floor_02_diff_1k.jpg",
+    "path": "blender/textures/brick_floor_02_diff.jpg"
+  },
+  {
+    "asset": "brick_floor_02",
+    "type": "nor_gl",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brick_floor_02/brick_floor_02_nor_gl_1k.jpg",
+    "path": "blender/textures/brick_floor_02_nor_gl.jpg"
+  }
+]

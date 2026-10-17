@@ -1,0 +1,7 @@
+node_modules/
+.venv/
+dist/
+*.blend1
+*.raw.glb
+.DS_Store
+test-results/

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de" data-palette="graphite" data-theme="light">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f2f2f0">
+  <meta name="description" content="Sankt Olofs kyrka in Skåne: eine im Browser begehbare, quellenkritische 3D-Rekonstruktion mit Innenraum, Fotoreferenzen und offengelegten Annahmen.">
+  <title>Sankt Olof · Eine Kirche begehen</title>
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+</head>
+<body>
+  <a class="skip" href="#places">Zur Ortsauswahl</a>
+  <header class="topbar">
+    <a class="wordmark" href="./"><strong>SANKT OLOF</strong><span>RAUMERKUNDUNG</span></a>
+    <span class="location">55°38′ N · 14°07′ E <span>Österlen, Skåne</span></span>
+    <nav aria-label="Seitenfunktionen">
+      <button id="sources-open" class="quiet">Quellen &amp; Modell</button>
+      <button id="settings-open" class="icon-button" aria-label="Darstellung einstellen"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16Z" fill="currentColor"/></svg></button>
+      <a class="icon-button" href="https://genaiedu.github.io/LearningApps/heft65wl2.html#religion" aria-label="Zurück zu LearningApps Religion"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h14"/></svg></a>
+    </nav>
+  </header>
+  <main class="workspace">
+    <aside class="editorial" id="places">
+      <div class="eyebrow">Eine Kirche in Südschweden</div>
+      <h1>Stein, Licht.<br><em>Erinnerung.</em></h1>
+      <p class="intro">Erkunde die Sankt Olofs kyrka: vom hellen Treppengiebel bis zu den bemalten Gewölben.</p>
+      <div class="model-note"><span class="note-dot"></span>Interpretative 3D-Rekonstruktion<br><small>Proportionen geschätzt · kein Aufmaß</small></div>
+      <h2 class="small-heading">Wähle deinen Standpunkt</h2>
+      <div class="places" role="group" aria-label="Standpunkte">
+        <button class="place active" data-place="overview" aria-pressed="true"><span>01</span><div><strong>Die Kirche von außen</strong><small>Giebel, Dach &amp; Friedhof</small></div><b aria-hidden="true">↗</b></button>
+        <button class="place" data-place="nave" aria-pressed="false"><span>02</span><div><strong>Unter den Gewölben</strong><small>Das zweischiffige Langhaus</small></div><b aria-hidden="true">↗</b></button>
+        <button class="place" data-place="choir" aria-pressed="false"><span>03</span><div><strong>Vor dem Hochaltar</strong><small>Der ältere Chorraum</small></div><b aria-hidden="true">↗</b></button>
+        <button class="place" data-place="font" aria-pressed="false"><span>04</span><div><strong>Am Taufstein</strong><small>Stein, Wasser &amp; Ritual</small></div><b aria-hidden="true">↗</b></button>
+      </div>
+      <section class="context" aria-live="polite"><span class="eyebrow" id="context-label">Architektur</span><h2 id="context-title">Ein auffälliger Umriss.</h2><p id="context-text">Weiße Wände, rote Dächer und gestufte Giebel prägen den heutigen Bau. Die ältesten Teile sind Chor und Sakristei.</p><button class="text-link" id="compare-open">Mit Fotografien vergleichen <span aria-hidden="true">↗</span></button></section>
+      <a class="official" href="https://www.svenskakyrkan.se/simrishamn/st-olofs-kyrka" target="_blank" rel="noopener">Zur Kirchengemeinde &amp; ihrem 360°-Rundgang ↗</a>
+    </aside>
+    <section class="stage" aria-label="Interaktive dreidimensionale Kirchenansicht">
+      <div id="viewport" tabindex="0" aria-label="3D-Ansicht. Mit Ziehen umsehen. Im Gehmodus mit W A S D oder den Pfeiltasten gehen. Escape gibt die Maus frei."></div>
+      <div class="stage-top"><span class="view-label" id="view-label">Außenansicht</span><span class="badge">Rekonstruktion · angenähert</span></div>
+      <div id="loading" class="loading" role="status"><div class="loading-title">Sankt Olof</div><p id="load-text">Die Kirche wird vorbereitet …</p><progress id="progress" max="100" value="0" aria-label="Ladefortschritt"></progress></div>
+      <div class="reticle" id="reticle" hidden aria-hidden="true">+</div>
+      <div class="viewer-actions"><button id="walk" class="primary" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="m8 21 3-7 3 3v4M8 12l2-5 4 2 3 4h3M11 14l1-6"/></svg>Frei begehen</button><button id="orbit" class="surface" hidden>Außenansicht</button><button id="fullscreen" class="surface icon-button" aria-label="3D-Ansicht als Vollbild"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></div>
+      <div class="walking-tools" id="walking-tools" hidden><button id="lock-mouse" class="surface">Maus koppeln</button><span class="surface hint">WASD / Pfeile · ziehen zum Umsehen</span></div>
+      <div class="touch-pad" id="touch-pad" hidden role="group" aria-label="Bewegungssteuerung"><button data-move="forward" aria-label="Vorwärts gehen">↑</button><div><button data-move="left" aria-label="Nach links gehen">←</button><button data-move="backward" aria-label="Rückwärts gehen">↓</button><button data-move="right" aria-label="Nach rechts gehen">→</button></div></div>
+      <figure class="minimap" aria-label="Schematischer Grundriss mit Standort. Maße geschätzt."><svg viewBox="-24 -21 54 44" role="img" aria-labelledby="map-title"><title id="map-title">Grundriss und Blickrichtung, nicht maßstabsgetreu</title><g transform="scale(1,-1)"><path d="M-10-6H8V-6H21V0H8V6H-10V-6M-10-6V-10H-4V-6" fill="var(--map-fill)" stroke="currentColor" stroke-width=".5"/><path d="M16-6V0M8-6V0" stroke="currentColor" stroke-width=".35"/><circle cx="-4" cy="0" r=".6" fill="currentColor"/><circle cx="2" cy="0" r=".6" fill="currentColor"/><g id="map-marker"><circle r=".8" fill="var(--red)"/><path d="M0 0 3.3-1.6 3.3 1.6Z" fill="var(--red)" opacity=".35"/></g></g><text x="23" y="-14" font-size="3">N ↑</text></svg><figcaption>Orientierung <span>schematisch</span></figcaption></figure>
+      <footer class="stage-footer"><span id="help">Ziehen zum Drehen · Scrollen zum Zoomen</span><span id="status" aria-live="polite">Modell lädt</span></footer>
+    </section>
+  </main>
+  <dialog id="sources-dialog" aria-labelledby="sources-title"><div class="dialog-head"><div><span class="eyebrow">Herkunft &amp; Genauigkeit</span><h2 id="sources-title">Was zeigen wir hier?</h2></div><button class="icon-button close" aria-label="Fenster schließen">×</button></div><div class="dialog-body">
+    <p class="lead">Eine begehbare Annäherung an den heutigen Kirchenraum. Fotografien belegen die Formen; sie ersetzen keine Vermessung.</p>
+    <div class="evidence-grid"><section><h3>Durch Quellen belegt</h3><p>Zweischiffiges Langhaus, Treppengiebel, rote Ziegeldächer, bemalte Gewölbe sowie vorhandene Altäre, Taufstein und Kanzel. Chor und Sakristei sind die ältesten Bauteile.</p></section><section><h3>Im Modell angenähert</h3><p>Alle Maße, Wandstärken, Wölbungen, Fensterprofile und die genaue Lage der Ausstattung. Freskenranken, Bankmalerei, Kanzel, Orgel und Taufstein sind vereinfacht. Gräber, Bäume und Wege sind eine hypothetische Umgebung; Grabinschriften werden nicht wiedergegeben.</p></section></div>
+    <p>Die Altarfronten verwenden zugeschnittene Fotografien von Hans A. Rosbach unter CC BY-SA 3.0. Sie sind flächige Fotooberflächen, keine vollständig modellierten Schnitzwerke. Die Gewölbemalerei ist eine freie ornamentale Annäherung und rekonstruiert keine einzelnen Bildmotive.</p>
+    <h3>Primärquellen</h3><ul class="source-list"><li><a href="https://www.svenskakyrkan.se/simrishamn/st-olofs-kyrka" target="_blank" rel="noopener">Simrishamns församling – Kirche, Baugeschichte und offizielle 360°-Ansichten ↗</a></li><li><a href="https://www.kyrkoguiderlundsstift.se/skane_049_text.html" target="_blank" rel="noopener">Kirchenführer des Bistums Lund – Bau und Ausstattung ↗</a></li><li><a href="https://app.raa.se/open/bebyggelse/bebyggelseobjekt/bc9883ff-f97b-47b9-b4eb-e38ba6dbfad2" target="_blank" rel="noopener">Riksantikvarieämbetet – Eintrag im Bebyggelseregistret ↗</a></li></ul>
+    <p>Die Kirche gehört heute zur evangelisch-lutherischen Svenska kyrkan. Ihr mittelalterlicher Ursprung liegt vor der Reformation. Die Darstellung verbindet den heutigen Bau mit überlieferten Ausstattungsstücken; sie zeigt keinen erfundenen historischen Zeitschnitt.</p>
+    <h3>Fotografien zum Vergleich</h3><p>Fotografien bleiben als Originalreferenzen erkennbar. Quellen, Urheber und Lizenzen stehen an jedem Bild. Die eingebundenen Kopien sind auf 1280 Pixel verkleinert.</p><div id="reference-gallery" class="gallery"></div>
+    <h3>Material &amp; Herstellung</h3><p>Gebäude, Gewölbe, Ausstattung und Materialien wurden in Blender erstellt und als GLB exportiert. Die Webansicht verwendet Three.js. Physikalisch basierte Oberflächen und HDR-Tageslicht verbessern die Materialwirkung; die Beleuchtung ist künstlerisch eingestellt und keine Lichtvermessung.</p><p>Fotomaterialien von <a href="https://polyhaven.com/license" target="_blank" rel="noopener">Poly Haven (CC0)</a>: <a href="https://polyhaven.com/a/white_plaster_02">White Plaster 02</a>, <a href="https://polyhaven.com/a/brick_floor_02">Brick Floor 02</a>, <a href="https://polyhaven.com/a/clay_roof_tiles">Clay Roof Tiles</a>, <a href="https://polyhaven.com/a/grass_ground">Grass Ground</a> und <a href="https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky">Kloofendal Daylight</a>. Diese Materialien wurden nicht an der Kirche aufgenommen.</p><p>Quellenprüfung: 17. Oktober 2026. Keine offizielle digitale Vermessung und keine Darstellung im Auftrag der Kirchengemeinde.</p><a href="https://github.com/genaiedu/sankt-olof-3d" class="text-link" target="_blank" rel="noopener">Blender-Datei, Quellcode und Rekonstruktionsnachweis auf GitHub ↗</a>
+  </div></dialog>
+  <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-head"><h2 id="settings-title">Deine Ansicht</h2><button class="icon-button close" aria-label="Fenster schließen">×</button></div><div class="dialog-body settings"><label>Lesepalette<select id="palette"><option value="graphite">Graphit</option><option value="atelier">Papier &amp; Wald</option><option value="slate">Schieferblau</option><option value="plum">Pflaume</option><option value="bordeaux">Bordeaux</option></select></label><label>Darstellung<select id="theme"><option value="light">Hell</option><option value="dark">Dunkel</option></select></label><label>Grafikqualität<select id="quality"><option value="auto">Automatisch</option><option value="high">Hoch</option><option value="low">Sparsam</option></select></label><label>Lichtstimmung<select id="light"><option value="day">Tageslicht</option><option value="warm">Spätes Nachmittagslicht</option></select></label><p class="fine">Die Standpunkte und die freie Begehung funktionieren auch ohne gekoppelte Maus. Auf dem Smartphone: mit dem Steuerkreuz gehen, mit einem Finger im Bild umsehen.</p></div></dialog>
+  <script type="module" src="/src/main.js"></script>
+</body></html>
