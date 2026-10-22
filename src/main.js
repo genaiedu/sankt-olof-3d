@@ -227,7 +227,7 @@ async function init(){
     const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);pmrem=new THREE.PMREMGenerator(renderer);
     const environmentPromise=new RGBELoader().loadAsync(asset('textures/daylight.hdr')).then(hdr=>{const env=pmrem.fromEquirectangular(hdr);scene.environment=env.texture;hdr.dispose();pmrem.dispose();}).catch(()=>{ /* Hemisphere and local lights remain a usable fallback. */ });
     const collisionPromise=fetch(asset('collisions.json')).then(r=>{if(!r.ok)throw Error('Kollisionsdaten fehlen');return r.json();}).then(rows=>{colliders=rows.map(b=>new THREE.Box3(new THREE.Vector3(b.min[0],b.min[2],-b.max[1]),new THREE.Vector3(b.max[0],b.max[2],-b.min[1])));});
-    const gltf=await loader.loadAsync(asset('sankt-olof.glb'),e=>{if(e.total){const v=Math.round(e.loaded/e.total*90);$('progress').value=v;$('load-text').textContent=`Gebäude und Materialien laden … ${v} %`;}});
+    const gltf=await loader.loadAsync(asset('sankt-olof.glb'),e=>{if(e.total){const v=Math.min(90,Math.round(e.loaded/e.total*90));$('progress').value=v;$('load-text').textContent=`Gebäude und Materialien laden … ${v} %`;}});
     model=gltf.scene;
     model.traverse(o=>{if(!o.isMesh)return;o.castShadow=true;o.receiveShadow=true;o.frustumCulled=true;const mats=Array.isArray(o.material)?o.material:[o.material];for(const m of mats){for(const key of ['map','normalMap','roughnessMap','metalnessMap'])if(m[key])m[key].anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),4);if(m.name.includes('Fensterglas')){m.transparent=true;m.opacity=.42;m.depthWrite=false;}if(m.name.includes('Rotfassung'))m.roughness=.9;}});
     scene.add(model);await collisionPromise;await environmentPromise;
