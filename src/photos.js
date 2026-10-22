@@ -1,4 +1,5 @@
 import {PHOTOS} from './photo-data.js';
+import {HISTORY} from './history-data.js';
 const $=id=>document.getElementById(id);
 const link=(label,url)=>{const a=document.createElement('a');a.textContent=label;a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;};
 export function setupPhotos(openDialog){
@@ -12,7 +13,9 @@ export function setupPhotos(openDialog){
     const title=document.createElement('strong');title.textContent=p.title;
     const description=document.createElement('p');description.textContent=p.description;
     const credit=document.createElement('p');credit.className='photo-credit';credit.append(`${p.author} · ${p.date}`,document.createElement('br'),link(p.rights,p.rightsUrl),' · ',link('Quelle auf Commons',p.source));
-    cap.append(title,description,credit);b.append(img,placeholder);f.append(b,cap);
+    const evidence=document.createElement('p');evidence.className='photo-credit photo-evidence';evidence.append(p.evidence.length?'Sachquelle: ':'Textgrundlage: ');
+    if(p.evidence.length)p.evidence.forEach((s,i)=>{if(i)evidence.append(' · ');evidence.append(link(s.label,s.url));});else evidence.append(link('Foto und Commons-Dateibeschreibung',p.source));
+    cap.append(title,description,evidence,credit);b.append(img,placeholder);f.append(b,cap);
     images.push({p,b,img,placeholder});
     img.onerror=()=>{img.hidden=true;placeholder.hidden=false;placeholder.textContent='Das externe Foto konnte nicht geladen werden. Die Quelle ist unten verlinkt.';};
     b.onclick=()=>{
@@ -24,6 +27,11 @@ export function setupPhotos(openDialog){
     return f;
   }
   for(const p of PHOTOS)$(`photos-${p.group}`).append(figure(p));
+  for(const event of HISTORY){
+    const li=document.createElement('li'),date=document.createElement('div'),content=document.createElement('div'),title=document.createElement('h4'),text=document.createElement('p'),sources=document.createElement('p');
+    date.className='timeline-date';date.textContent=event.date;title.textContent=event.title;text.textContent=event.text;sources.className='timeline-sources';sources.append('Quelle: ');
+    event.sources.forEach((s,i)=>{if(i)sources.append(' · ');sources.append(link(s.label,s.url));});content.append(title,text,sources);li.append(date,content);$('timeline-events').append(li);
+  }
   $('photo-dialog').addEventListener('close',()=>$('photo-full').removeAttribute('src'));
   function setAllowed(value){
     allowed=Boolean(value);

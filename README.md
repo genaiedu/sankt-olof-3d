@@ -21,6 +21,8 @@ Außen: ziehen und zoomen. Vier Standpunkte führen nach außen, ins Langhaus, z
 
 Unter der 3D-Ansicht stehen **14 extern geladene Fotografien** in den Abschnitten Bau/Raum, Ausstattung und Archiv. Alle sind auf Commons als Public Domain oder CC0 ausgewiesen; drei historische Außenansichten von 1900 sind ausdrücklich als solche beschriftet. Quellen, Fotografen, Rechteverweise und Prüftag stehen im Metadatenmodul `src/photo-data.js`. Bilder erscheinen unbeschnitten und lassen sich vergrößern. Es wurden dafür keine Bilddateien heruntergeladen oder ins Repository aufgenommen. Der ältere, für die Blender-Modellherstellung dokumentierte lokale Quellenbestand bleibt davon getrennt; die Browser-Fotostrecke greift nicht mehr darauf zu.
 
+Begleittexte besitzen getrennte Sachquellen. Der anschließende Zeitstrahl enthält acht ausgewählte Stationen mit einzeln sichtbaren Quellenlinks (`src/history-data.js`). Unsicherheiten bleiben kenntlich: etwa die unterschiedliche Langhausdatierung im Kirchenführer (15. Jahrhundert) und im archäologischen Bericht (14. oder 15. Jahrhundert). Die Zeitabstände sind ausdrücklich nicht maßstäblich. Es werden keine fehlenden Ereignisse, Künstlernamen oder präzisen Herstellungsjahre ergänzt.
+
 ## Lokal starten und prüfen
 
 Node 22 oder neuer:

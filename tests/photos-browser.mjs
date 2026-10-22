@@ -19,6 +19,7 @@ try{
   await page.locator('#photos-title').evaluate(el=>el.scrollIntoView({block:'start'}));await page.screenshot({path:out+'/03-fotostrecke.png'});
   await page.locator('#photos-detail-title').scrollIntoViewIfNeeded();await page.screenshot({path:out+'/04-details.png'});
   await page.locator('#photos-archive-title').scrollIntoViewIfNeeded();await page.screenshot({path:out+'/05-archiv.png'});
+  assert.equal(await page.locator('.photo-evidence').count(),14);assert.equal(await page.locator('#timeline-events li').count(),8);await page.locator('#church-timeline').evaluate(el=>el.scrollIntoView({block:'start'}));await page.screenshot({path:out+'/zeitstrahl.png'});
   await page.locator('.photo-open').first().click();await page.waitForFunction(()=>document.querySelector('#photo-full').naturalWidth>0);assert(await page.locator('#photo-dialog').isVisible());await page.screenshot({path:out+'/06-vergroessert.png'});await page.locator('#photo-dialog .close').click();
   await page.locator('#photo-toggle').click();assert.equal(await page.locator('.photo-card img[src]').count(),0);const count=requests.length;await page.waitForTimeout(300);assert.equal(requests.length,count);
   await page.locator('#back-to-church').click();await page.locator('#explore').click();await page.locator('#settings-open').click();await page.locator('#theme').selectOption('dark');await page.locator('#settings-dialog .close').click();await page.locator('#photos-open').click();await page.screenshot({path:out+'/07-dunkel-ohne.png'});
