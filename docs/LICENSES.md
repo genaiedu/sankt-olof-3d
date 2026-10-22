@@ -6,5 +6,7 @@
 - **Poly Haven:** [CC0](https://polyhaven.com/license). White Plaster 02, Brick Floor 02, Clay Roof Tiles, Grass Ground, Kloofendal 48d Partly Cloudy Puresky. Putz und Gras wurden farblich angepasst. Foliage- und Bankmuster sind neu gezeichnete Rekonstruktionsmuster. Downloadnachweise: `pbr-assets.json`; verwendete endgültige Bodentextur: https://polyhaven.com/a/brick_floor_02.
 - **Fira Sans und EB Garamond:** SIL Open Font License. Unveränderte Schriftdateien und Lizenztexte liegen unter `src/fonts/` bzw. im Webbuild unter `licenses/`.
 - **Three.js:** MIT, Lizenztext unter `public/licenses/Three-MIT.txt`.
+- **SunCalc 1.9.0:** BSD-2-Clause, Copyright Vladimir Agafonkin; lokal gebündelte Berechnung von Sonnen-/Mondständen. Lizenztext unter `public/licenses/SunCalc-BSD-2-Clause.txt`.
+- **Zusätzlicher Himmel, Blatt-/Grasatlanten und Objektivreflextexturen:** eigene prozedurale Umsetzung im Anwendungscode, MIT. Keine zusätzlich heruntergeladenen Wetter-, Sternkarten- oder Vegetationsbilder. Die neue Blattdarstellung im Browser ist kein fotografisches Abbild des Kirchhofs.
 - **Meshoptimizer:** MIT, Copyright Arseny Kapoulkine; mit dem Three.js-Meshopt-Decoder ausgeliefert, Lizenztext unter `public/licenses/Meshoptimizer-MIT.txt`.
-- Offizielle Gemeinde-, Bistums- und Denkmalwebseiten sowie die Panoramen werden verlinkt; ihre Medien wurden nicht kopiert.
+- Offizielle Gemeinde- und Bistumswebseiten sowie die Panoramen werden verlinkt; ihre Medien wurden nicht kopiert. Zusätzliche vom Auftraggeber gezeigte Fotoreferenzen wurden nicht in die auslieferbaren Dateien übernommen.
