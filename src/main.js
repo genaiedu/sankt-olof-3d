@@ -15,18 +15,19 @@ import { pointBlocked } from './navigation.js';
 import { Atmosphere } from './atmosphere.js';
 import { Vegetation } from './vegetation.js';
 import { clockText, nextDate, solarEvents, steeringStep } from './daylight.js';
-import { sampleFlight, flightCaption, FLIGHT_DURATION } from './flight.js';
+import { sampleFlight, flightCaption, flightClock, FLIGHT_DURATION } from './flight.js';
+import { setupPhotos } from './photos.js';
 
 const $ = (id) => document.getElementById(id);
 const base = import.meta.env.BASE_URL;
 const asset = (name) => `${base}assets/${name}`;
 const root = document.documentElement;
 const saved = (() => { try { return JSON.parse(localStorage.getItem('sankt-olof-view') || '{}'); } catch { return {}; } })();
-const prefs = { palette: 'graphite', theme: 'light', quality: 'auto', date:'2026-09-22', time:saved.light==='warm'?1050:840, flare:true, ...saved };
+const prefs = { palette: 'graphite', theme: 'light', quality: 'auto', date:'2026-09-22', time:saved.light==='warm'?1050:840, ...saved };
 const valid = { palette: ['graphite','atelier','slate','plum','bordeaux'], theme: ['light','dark'], quality: ['auto','high','low'] };
 for (const k of Object.keys(valid)) if (!valid[k].includes(prefs[k])) prefs[k] = valid[k][0];
 if(!/^20\d\d-\d\d-\d\d$/.test(prefs.date)||!Number.isFinite(Date.parse(prefs.date)))prefs.date='2026-09-22';
-if(!Number.isFinite(prefs.time))prefs.time=840;prefs.time=THREE.MathUtils.clamp(prefs.time,0,1439);prefs.flare=prefs.flare!==false;
+if(!Number.isFinite(prefs.time))prefs.time=840;prefs.time=THREE.MathUtils.clamp(prefs.time,0,1439);delete prefs.flare;
 function savePrefs() { try { localStorage.setItem('sankt-olof-view',JSON.stringify(prefs)); } catch {} }
 function applyReading() { root.dataset.palette=prefs.palette;root.dataset.theme=prefs.theme; }
 applyReading();
@@ -38,22 +39,26 @@ for (const d of document.querySelectorAll('dialog')) {
 function openDialog(id) { clearInput(); if(document.pointerLockElement)document.exitPointerLock();$(id).showModal(); }
 $('sources-open').onclick=() => openDialog('sources-dialog');
 $('flight-sources').onclick=() => openDialog('sources-dialog');
-$('compare-open').onclick=() => {openDialog('sources-dialog');setTimeout(() => $('reference-gallery').scrollIntoView({block:'start'}),40);};
+$('compare-open').onclick=goPhotos;
+$('photos-open').onclick=goPhotos;$('photos-jump').onclick=goPhotos;$('photos-from-sources').onclick=goPhotos;
+$('back-to-church').onclick=()=>{stage.scrollIntoView({block:'start',behavior:'instant'});viewport.focus({preventScroll:true});};
 $('settings-open').onclick=() => openDialog('settings-dialog');
 for(const k of Object.keys(valid)) {$(k).value=prefs[k];$(k).addEventListener('change',()=>{prefs[k]=$(k).value;applyReading();savePrefs();if(renderer)applyQuality();if(scene)applyLight();});}
-fetch(asset('references/credits.json')).then(r=>{if(!r.ok)throw Error(r.status);return r.json();}).then(rows=>{
-  for(const row of rows) {
-    const figure=document.createElement('figure');const img=document.createElement('img');img.src=`${base}${row.local}`;img.alt=row.kind==='exterior'?`Außenaufnahme der Sankt Olofs kyrka: ${row.title}`:`Innenaufnahme der Sankt Olofs kyrka: ${row.title}`;img.loading='lazy';img.width=640;img.height=440;
-    const caption=document.createElement('figcaption');const a=document.createElement('a');a.href=row.url;a.target='_blank';a.rel='noopener';a.textContent=row.title;caption.append(a,document.createElement('br'),`${row.author.trim()} · `);
-    if(row.license_url){const l=document.createElement('a');l.href=row.license_url;l.textContent=row.license;l.target='_blank';l.rel='noopener';caption.append(l);}else caption.append(row.license);
-    caption.append(' · verkleinerte Kopie');figure.append(img,caption);$('reference-gallery').append(figure);
-  }
-}).catch(()=>{$('reference-gallery').textContent='Die Bildnachweise konnten nicht geladen werden. Die vollständigen Referenzen stehen im GitHub-Repository.';});
+const photographs=setupPhotos(openDialog);
+let started=false,sceneVisible=true;
+function startApp(withPhotos){
+  if(started)return;started=true;photographs.setAllowed(withPhotos);$('entry').hidden=true;$('app-content').hidden=false;document.body.classList.remove('entry-pending');window.scrollTo(0,0);viewport.focus({preventScroll:true});init();
+}
+$('start-with-photos').onclick=()=>startApp(true);$('start-without-photos').onclick=()=>startApp(false);
+async function goPhotos(){
+  if(document.fullscreenElement)await document.exitFullscreen();
+  if($('sources-dialog').open)$('sources-dialog').close();pauseScene();$('photographs').scrollIntoView({block:'start',behavior:'instant'});$('photo-toggle').focus({preventScroll:true});
+}
 
 let renderer,scene,camera,controls,model,sun,hemi,pmrem,clock,composer,ao,bloom,soften,atmosphere,vegetation;
 let ready=false,mode='orbit',place='overview',yaw=0,pitch=0,indoors=false,frameCount=0,lastStats=0;
 let playing=false,skyMinute=-1,turnVelocity=0,timeElapsed=0;
-let flightTime=0,flightPaused=true;
+let flightTime=0,flightPaused=true,flightStartDate=prefs.date;
 const keys=new Set();const pressedMoves=new Set();const windowLights=[],nightLights=[];let colliders=[];
 const viewport=$('viewport');const stage=document.querySelector('.stage');
 const move=new THREE.Vector3();const target=new THREE.Vector3();
@@ -112,7 +117,8 @@ function blocked(x,z) {
 function setLook(look) {camera.lookAt(...look);yaw=camera.rotation.y;pitch=camera.rotation.x;}
 function setMode(next) {
   if(mode==='flight'&&next!=='flight'){flightPaused=true;pauseTime();}
-  mode=next;controls.enabled=next==='orbit';clearInput();document.body.classList.toggle('tour-view',next==='flight');
+  mode=next;controls.enabled=next==='orbit';clearInput();document.body.classList.toggle('tour-view',next==='flight');document.body.classList.remove('explore-view');$('free-intro').hidden=true;
+  for(const id of ['time','clock-input','date','time-play','time-speed'])$(id).disabled=next==='flight';for(const b of document.querySelectorAll('[data-sky]'))b.disabled=next==='flight';
   $('flight').textContent=next==='flight'?(flightPaused?'Flug fortsetzen':'Flug pausieren'):'Rundflug';$('flight').setAttribute('aria-pressed',String(next==='flight'&&!flightPaused));
   $('walk').hidden=next==='walk';$('orbit').hidden=next==='orbit';$('walking-tools').hidden=next!=='walk';$('touch-pad').hidden=next!=='walk'||(!matchMedia('(pointer:coarse)').matches&&innerWidth>760);
   $('help').textContent=next==='orbit'?'Ziehen zum Drehen · Scrollen zum Zoomen':'↑ / ↓: vor & zurück · ← / →: drehen · Ziehen: umsehen';
@@ -120,15 +126,21 @@ function setMode(next) {
   if(next==='orbit'&&document.pointerLockElement)document.exitPointerLock();
 }
 function updateFlight(dt){
-  if(!flightPaused&&!document.querySelector('dialog[open]'))flightTime=(flightTime+dt)%FLIGHT_DURATION;
+  if(!flightPaused&&!document.querySelector('dialog[open]'))flightTime=Math.min(flightTime+dt,FLIGHT_DURATION);
   const frame=sampleFlight(flightTime);camera.position.copy(frame.position);setLook(frame.look.toArray());
+  const clockFrame=flightClock(flightStartDate,flightTime);prefs.time=clockFrame.time;const dateChanged=prefs.date!==clockFrame.date;prefs.date=clockFrame.date;if(dateChanged||Math.floor(prefs.time)!==skyMinute)applyLight();
+  $('view-label').textContent=`Rundflug ${frame.flight} von 2 · Sankt Olof`;
   const caption=flightCaption(frame.leg,flightTime);if($('flight-text').textContent!==caption.text){$('flight-text').textContent=caption.text;fitFlightText();}$('flight-caption').style.opacity=flightPaused?1:caption.opacity;
   const inside=insideBuilding(camera.position)&&camera.position.y<7.5;if(inside!==indoors)setInteriorLighting(inside);
-  viewport.dataset.flightTime=flightTime.toFixed(3);viewport.dataset.flightLeg=String(frame.leg);viewport.dataset.flightPaused=String(flightPaused);
+  viewport.dataset.flightTime=flightTime.toFixed(3);viewport.dataset.flightLeg=String(frame.leg);viewport.dataset.flightNumber=String(frame.flight);viewport.dataset.flightPaused=String(flightPaused);
+  if(frame.done)finishFlight();
 }
 function startFlight(paused=false){
-  if(!ready)return;prefs.time=300;applyLight();flightTime=0;flightPaused=paused;setMode('flight');$('view-label').textContent='Drohnenflug · Sankt Olof';$('time-speed').value='1.2';
+  if(!ready)return;delete viewport.dataset.flightComplete;flightStartDate=prefs.date;prefs.time=300;applyLight();flightTime=0;flightPaused=paused;setMode('flight');$('view-label').textContent='Rundflug 1 von 2 · Sankt Olof';$('time-speed').value=String(1440/FLIGHT_DURATION);
   if(paused)pauseTime();else startTime();updateFlight(0);updateMap();
+}
+function finishFlight(){
+  flightPaused=true;setMode('walk');place='walk';document.body.classList.add('explore-view');$('view-label').textContent='Dein eigener Weg · am Westportal';$('free-intro').hidden=false;$('help').textContent='↑ / ↓ gehen · ← / → drehen';viewport.dataset.flightComplete='true';viewport.dataset.flightPaused='true';viewport.focus({preventScroll:true});savePrefs();updateMap();
 }
 $('flight').onclick=()=>{if(mode!=='flight'){startFlight();return;}flightPaused=!flightPaused;if(flightPaused)pauseTime();else startTime();$('flight').textContent=flightPaused?'Flug fortsetzen':'Flug pausieren';$('flight').setAttribute('aria-pressed',String(!flightPaused));};
 $('explore').onclick=async()=>{if(document.fullscreenElement)await document.exitFullscreen();goTo('overview');};
@@ -152,11 +164,11 @@ function clearInput(){keys.clear();pressedMoves.clear();turnVelocity=0;for(const
 window.addEventListener('blur',clearInput);document.addEventListener('visibilitychange',clearInput);
 document.addEventListener('keydown',e=>{
   if(mode!=='walk'||!ready||document.querySelector('dialog[open]')||/INPUT|SELECT|TEXTAREA|BUTTON|A/.test(document.activeElement?.tagName||''))return;
-  if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ShiftLeft','ShiftRight'].includes(e.code)){e.preventDefault();keys.add(e.code);}
+  if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ShiftLeft','ShiftRight'].includes(e.code)){e.preventDefault();keys.add(e.code);$('free-intro').hidden=true;}
 });
 document.addEventListener('keyup',e=>keys.delete(e.code));
 for(const b of document.querySelectorAll('[data-move]')){
-  b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);pressedMoves.add(b.dataset.move);b.classList.add('pressed');});
+  b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);pressedMoves.add(b.dataset.move);b.classList.add('pressed');$('free-intro').hidden=true;});
   for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>{pressedMoves.delete(b.dataset.move);b.classList.remove('pressed');});
 }
 let dragging=false,pointerX=0,pointerY=0,dragId;
@@ -190,9 +202,9 @@ function stepWalk(dt) {
   const inside=insideBuilding(camera.position);if(inside!==indoors)setInteriorLighting(inside);
 }
 function loop(){
-  requestAnimationFrame(loop);if(!renderer||document.hidden)return;
+  requestAnimationFrame(loop);if(!renderer||document.hidden||!sceneVisible)return;
   const elapsed=Math.min(clock.getDelta(),.25),dt=Math.min(elapsed,.05);
-  if(playing&&ready&&!document.querySelector('dialog[open]')){
+  if(playing&&mode!=='flight'&&ready&&!document.querySelector('dialog[open]')){
     prefs.time+=elapsed*Number($('time-speed').value);timeElapsed+=elapsed;
     if(prefs.time>=1440){prefs.time-=1440;prefs.date=nextDate(prefs.date);}
     if(Math.floor(prefs.time)!==skyMinute)applyLight();
@@ -200,7 +212,7 @@ function loop(){
   }
   if(ready){if(mode==='walk')stepWalk(dt);else if(mode==='flight')updateFlight(elapsed);else controls.update();updateMap();}
   const motion=matchMedia('(prefers-reduced-motion:reduce)').matches?0:dt;
-  atmosphere?.tick(motion,camera,prefs.flare,lowQuality());vegetation?.tick(motion);
+  atmosphere?.tick(motion,camera);vegetation?.tick(motion);
   if(composer)composer.render();else renderer.render(scene,camera);frameCount++;
   if(performance.now()-lastStats>1600){viewport.dataset.fps=(frameCount*1000/(performance.now()-lastStats)).toFixed(1);frameCount=0;$('status').textContent=ready?(mode==='walk'?(indoors?'Im Kirchenraum':'Auf dem Kirchhof'):'Modell bereit'):'Modell lädt';lastStats=performance.now();}
 }
@@ -224,6 +236,7 @@ async function init(){
       const p=new THREE.PointLight('#ffe8cb',0,20,2);p.name='Warme Innenbeleuchtung bei Nacht';p.position.set(x,y,z);p.userData.strength=power;p.shadow.mapSize.set(512,512);p.shadow.camera.near=.15;p.shadow.camera.far=20;p.shadow.normalBias=.035;p.shadow.bias=-.0001;nightLights.push(p);scene.add(p);
     }
     clock=new THREE.Clock();applyQuality();applyLight();new ResizeObserver(resize).observe(viewport);window.addEventListener('resize',resize);
+    new IntersectionObserver(entries=>{sceneVisible=entries[0].isIntersecting;clock.getDelta();if(!sceneVisible)pauseScene();},{threshold:0}).observe(stage);
     const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);pmrem=new THREE.PMREMGenerator(renderer);
     const environmentPromise=new RGBELoader().loadAsync(asset('textures/daylight.hdr')).then(hdr=>{const env=pmrem.fromEquirectangular(hdr);scene.environment=env.texture;hdr.dispose();pmrem.dispose();}).catch(()=>{ /* Hemisphere and local lights remain a usable fallback. */ });
     const collisionPromise=fetch(asset('collisions.json')).then(r=>{if(!r.ok)throw Error('Kollisionsdaten fehlen');return r.json();}).then(rows=>{colliders=rows.map(b=>new THREE.Box3(new THREE.Vector3(b.min[0],b.min[2],-b.max[1]),new THREE.Vector3(b.max[0],b.max[2],-b.min[1])));});
@@ -244,7 +257,6 @@ $('clock-input').addEventListener('change',e=>{const [h,m]=e.target.value.split(
 $('date').addEventListener('change',e=>{if(/^20\d\d-\d\d-\d\d$/.test(e.target.value)&&Number.isFinite(Date.parse(e.target.value))){pauseTime();prefs.date=e.target.value;applyLight();savePrefs();}});
 $('time-play').onclick=()=>{if(playing)pauseTime();else startTime();};
 for(const b of document.querySelectorAll('[data-sky]'))b.onclick=()=>{const events=solarEvents(prefs.date);selectTime({dawn:events.sunrise+8,day:780,sunset:events.sunset-8,night:1350}[b.dataset.sky]);};
-$('flare').checked=prefs.flare;$('flare').onchange=e=>{prefs.flare=e.target.checked;savePrefs();};
 if(innerWidth<850)$('time-controls').open=false;
-document.addEventListener('visibilitychange',()=>{if(document.hidden){pauseTime();if(mode==='flight'){flightPaused=true;$('flight').textContent='Flug fortsetzen';$('flight').setAttribute('aria-pressed','false');}clock?.getDelta();}});
-init();
+function pauseScene(){pauseTime();clearInput();if(mode==='flight'){flightPaused=true;$('flight').textContent='Flug fortsetzen';$('flight').setAttribute('aria-pressed','false');viewport.dataset.flightPaused='true';}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){pauseScene();clock?.getDelta();}});

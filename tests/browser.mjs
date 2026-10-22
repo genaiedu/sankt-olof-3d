@@ -10,7 +10,8 @@ try{
   const ctx=await browser.newContext({viewport:{width:1440,height:1000}}),page=await ctx.newPage();
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('response',r=>{if(r.status()>=400)badResponses.push([r.status(),r.url()]);});
   await page.route('**/*',r=>{if(!r.request().url().startsWith(new URL(base).origin)){external.push(r.request().url());return r.abort();}return r.continue();});
-  await page.goto(base);await page.waitForFunction(()=>document.querySelector('#loading').hidden,{timeout:60000});await page.evaluate(()=>document.fonts.ready);
+  const start=async()=>{await page.locator('#start-without-photos').click();await page.waitForFunction(()=>document.querySelector('#loading').hidden,{timeout:60000});};
+  await page.goto(base);await start();await page.evaluate(()=>document.fonts.ready);
   assert.equal(await page.locator('#viewport').getAttribute('data-mode'),'flight');await page.locator('#flight').click();await page.waitForFunction(()=>document.querySelector('#viewport').dataset.flightPaused==='true');
   await page.screenshot({path:out+'/00-drohnenstart.png'});await page.locator('#explore').click();
   if(!await page.locator('#time').isVisible())await page.locator('#time-controls summary').click();await page.getByRole('button',{name:'Tag',exact:true}).click();await page.locator('#time-controls summary').click();
@@ -26,7 +27,7 @@ try{
   await page.screenshot({path:out+'/03-nacht.png'});
   const before=await page.locator('#viewport').getAttribute('data-clock');await page.locator('#time-play').click();await page.waitForFunction(old=>document.getElementById('viewport').dataset.clock!==old,before);await page.locator('#time-play').click();assert.equal(await page.locator('#time-play').getAttribute('aria-pressed'),'false');
   await page.locator('#clock-input').fill('14:20');await page.locator('#clock-input').press('Tab');await page.waitForFunction(()=>document.getElementById('viewport').dataset.clock==='14:20');
-  await page.reload();await page.waitForFunction(()=>document.querySelector('#loading').hidden);assert.equal(await page.locator('#viewport').getAttribute('data-clock'),'05:00');assert.equal(await page.locator('#viewport').getAttribute('data-mode'),'flight');await page.locator('#explore').click();assert.equal(await page.locator('#time-play').getAttribute('aria-pressed'),'false');
+  await page.reload();await start();assert.match(await page.locator('#viewport').getAttribute('data-clock'),/^05:0\d$/);assert.equal(await page.locator('#viewport').getAttribute('data-mode'),'flight');await page.locator('#explore').click();assert.equal(await page.locator('#time-play').getAttribute('aria-pressed'),'false');
   if(!await page.locator('#date').isVisible())await page.locator('#time-controls summary').click();
   await page.locator('#clock-input').fill('14:20');await page.locator('#clock-input').press('Tab');
   const autumnAltitude=Number(await page.locator('#viewport').getAttribute('data-solar-altitude'));
@@ -65,7 +66,7 @@ try{
   for(const width of [768,390]){await page.setViewportSize({width,height:844});await page.locator('[data-place=overview]').click();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:out+`/mobil-${width}.png`,fullPage:true});}
   await page.locator('#flight').click();await page.locator('#flight').click();await rendered();assert(await page.locator('#walking-tools').isHidden());assert(await page.locator('#flight-text').evaluate(el=>el.scrollWidth<=el.clientWidth+1));assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:out+'/mobil-rundflug.png'});
   const fps=await page.locator('#viewport').getAttribute('data-fps');
-  await page.emulateMedia({reducedMotion:'reduce'});await page.reload();await page.waitForFunction(()=>document.querySelector('#loading').hidden);assert.equal(await page.locator('#viewport').getAttribute('data-flight-paused'),'true');assert.equal(await page.locator('#time-play').getAttribute('aria-pressed'),'false');
+  await page.emulateMedia({reducedMotion:'reduce'});await page.reload();await start();assert.equal(await page.locator('#viewport').getAttribute('data-flight-paused'),'true');assert.equal(await page.locator('#time-play').getAttribute('aria-pressed'),'false');
   await ctx.close();
   assert.deepEqual(errors,[]);assert.deepEqual(badResponses,[]);assert.deepEqual(external,[]);
   const report={modelLoaded:true,nonBlankCanvas:true,timeDoesNotMoveCamera:true,daySunsetNight:true,dateChangesSolarAltitude:true,timelapsePause:true,reloadStartsAtFive:true,threeInteriorStations:true,interruptibleArrowSteering:true,forwardBackwardWithoutTurning:true,nightInteriorScreenshots:true,sunAndMoonAimedWithMouse:true,fullscreen:true,lowQualityNonBlank:true,mobileTourFits:true,reducedMotionStartsPaused:true,palettes,viewportWidths:[1440,768,390],fps,errors,badResponses,external};

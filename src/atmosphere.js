@@ -1,19 +1,10 @@
 import * as THREE from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
-import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
 import { celestial, celestialDirection } from './daylight.js';
 
 const smooth=(a,b,v)=>THREE.MathUtils.smoothstep(v,a,b);
 const vertex=`varying vec3 worldNormal;varying vec2 texUV;void main(){texUV=uv;worldNormal=normalize(mat3(modelMatrix)*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
 const noise=`float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}float fbm(vec2 p){float f=0.;f+=.5*noise(p);p=p*2.07+13.4;f+=.25*noise(p);p=p*2.01+8.4;f+=.125*noise(p);p=p*2.04;f+=.0625*noise(p);return f;}`;
-
-function flareTexture(ring=false) {
-  const canvas=document.createElement('canvas');canvas.width=canvas.height=256;const c=canvas.getContext('2d');
-  const g=c.createRadialGradient(128,128,0,128,128,128);
-  if(ring){g.addColorStop(0,'rgba(180,220,255,0)');g.addColorStop(.55,'rgba(180,220,255,0)');g.addColorStop(.7,'rgba(180,220,255,.12)');g.addColorStop(.78,'rgba(255,215,170,.3)');g.addColorStop(1,'rgba(255,215,170,0)');}
-  else {g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.035,'rgba(255,250,220,1)');g.addColorStop(.10,'rgba(255,225,170,.45)');g.addColorStop(.3,'rgba(255,210,150,.10)');g.addColorStop(1,'rgba(255,190,120,0)');}
-  c.fillStyle=g;c.fillRect(0,0,256,256);return new THREE.CanvasTexture(canvas);
-}
 
 export class Atmosphere {
   constructor(scene,renderer) {
@@ -55,11 +46,6 @@ export class Atmosphere {
     const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(positions,3));geo.setAttribute('size',new THREE.BufferAttribute(sizes,1));
     this.stars=new THREE.Points(geo,new THREE.ShaderMaterial({vertexShader:`attribute float size;varying float elevation;uniform float pixelRatio;void main(){vec4 p=modelMatrix*vec4(position,1.);elevation=normalize(p.xyz-cameraPosition).y;gl_PointSize=size*pixelRatio;gl_Position=projectionMatrix*viewMatrix*p;}`,fragmentShader:`uniform float night;varying float elevation;void main(){float r=length(gl_PointCoord-.5)*2.;float a=(1.-smoothstep(.05,1.,r))*night*smoothstep(0.,.15,elevation);gl_FragColor=vec4(.77,.85,1.,a);}`,uniforms:{night:{value:0},pixelRatio:{value:1}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}));
     this.stars.name='Illustrativer Sternenhimmel, kein Sternkatalog';this.stars.renderOrder=1;scene.add(this.stars);
-    this.flare=new Lensflare();this.flare.name='Objektivreflexe mit Tiefenverdeckung';
-    const core=flareTexture(),ring=flareTexture(true);
-    this.flare.addElement(new LensflareElement(core,620,0,new THREE.Color('#fff3cf')));
-    for(const [size,d,color]of [[105,.35,'#c0dce2'],[45,.62,'#d4d9a4'],[160,.88,'#b5b9e2'],[65,1.1,'#edd2b7']])this.flare.addElement(new LensflareElement(ring,size,d,new THREE.Color(color)));
-    scene.add(this.flare);
   }
   setTime(date,minutes) {
     const v=celestial(date,minutes);this.values=v;this.sunDirection.fromArray(celestialDirection(v.sun));this.moonDirection.fromArray(celestialDirection(v.moon));
@@ -85,10 +71,9 @@ export class Atmosphere {
     this.hemi.color.set('#91b6d7').lerp(new THREE.Color('#d4e6f3'),d);this.hemi.groundColor.set('#1b2430').lerp(new THREE.Color('#6f7053'),d);
     this.renderer.toneMappingExposure=inside?1.18:1.02+(1-d)*.5;
   }
-  tick(dt,camera,allowFlare=true,low=false) {
+  tick(dt,camera) {
     this.elapsed+=dt;this.sky.position.copy(camera.position);this.sky.material.uniforms.cloudTime.value=this.elapsed;
     this.moon.position.copy(camera.position).addScaledVector(this.moonDirection,800);this.stars.position.copy(camera.position);
     this.stars.material.uniforms.pixelRatio.value=this.renderer.getPixelRatio();
-    this.flare.position.copy(camera.position).addScaledVector(this.sunDirection,700);this.flare.visible=allowFlare&&!low&&this.sunDirection.y>0;
   }
 }

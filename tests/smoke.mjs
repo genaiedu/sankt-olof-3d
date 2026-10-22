@@ -21,7 +21,8 @@ assert(document.meshes.length>10&&document.meshes.length<60);assert(document.mat
 const credits=await json('../public/assets/references/credits.json');assert.equal(credits.length,14);
 for(const row of credits){assert(row.author.trim());assert(row.license);await stat(new URL('../public/'+row.local,import.meta.url));}
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');assert(!/fonts\.google|unpkg|jsdelivr/.test(html));assert(html.includes('Rekonstruktion · angenähert'));assert(html.includes('id="touch-pad"'));assert(html.includes('id="sources-dialog"'));
-for(const id of ['time','clock-input','date','time-play','time-speed','flare'])assert(html.includes(`id="${id}"`),id);
+for(const id of ['time','clock-input','date','time-play','time-speed','entry','start-with-photos','start-without-photos','photographs','photo-toggle'])assert(html.includes(`id="${id}"`),id);
+assert(!html.includes('id="flare"'));assert(!(await readFile(new URL('../src/atmosphere.js',import.meta.url),'utf8')).includes('Lensflare'));
 const landscape=await json('../public/assets/landscape.json');assert(landscape.trees.length>=12);assert(landscape.paths.length>10);
 assert(landscape.trees.every(t=>Number.isFinite(t.crownZ)&&t.radius>1));
 const source=await readFile(new URL('../blender/build_church.py',import.meta.url),'utf8');assert(!source.includes("cylinder('Treppentürmchen'"));assert(source.includes('Glockengiebel'));
