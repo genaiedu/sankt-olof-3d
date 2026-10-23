@@ -5,7 +5,7 @@ import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
+import { AlphaAwareSSAOPass } from './AlphaAwareSSAOPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
@@ -226,7 +226,7 @@ async function init(){
     renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();ready=false;$('loading').hidden=false;fail('Die Grafikverbindung wurde unterbrochen. Bitte lade die Seite neu oder wähle eine sparsame Grafikqualität.');});
     scene=new THREE.Scene();scene.fog=new THREE.Fog('#c7d8e1',95,440);
     camera=new THREE.PerspectiveCamera(58,1,.09,1800);camera.rotation.order='YXZ';camera.position.fromArray(stations.overview.pos);camera.lookAt(...stations.overview.look);
-    composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));ao=new SSAOPass(scene,camera,512,512,12);ao.kernelRadius=.6;ao.minDistance=.001;ao.maxDistance=.025;composer.addPass(ao);bloom=new UnrealBloomPass(new THREE.Vector2(512,512),.14,.65,1.3);composer.addPass(bloom);
+    composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));ao=new AlphaAwareSSAOPass(scene,camera,512,512,12);ao.kernelRadius=.6;ao.minDistance=.001;ao.maxDistance=.025;composer.addPass(ao);bloom=new UnrealBloomPass(new THREE.Vector2(512,512),.14,.65,1.3);composer.addPass(bloom);
     soften=new ShaderPass({uniforms:{tDiffuse:{value:null},pixel:{value:new THREE.Vector2()}},vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'uniform sampler2D tDiffuse;uniform vec2 pixel;varying vec2 vUv;void main(){vec4 c=texture2D(tDiffuse,vUv)*.40;c+=(texture2D(tDiffuse,vUv+vec2(pixel.x,0.))+texture2D(tDiffuse,vUv-vec2(pixel.x,0.))+texture2D(tDiffuse,vUv+vec2(0.,pixel.y))+texture2D(tDiffuse,vUv-vec2(0.,pixel.y)))*.10;c+=(texture2D(tDiffuse,vUv+pixel)+texture2D(tDiffuse,vUv-pixel)+texture2D(tDiffuse,vUv+vec2(pixel.x,-pixel.y))+texture2D(tDiffuse,vUv+vec2(-pixel.x,pixel.y)))*.05;gl_FragColor=c;}'});composer.addPass(soften);composer.addPass(new OutputPass());composer.addPass(new FXAAPass());
     controls=new OrbitControls(camera,renderer.domElement);controls.target.fromArray(stations.overview.look);controls.enableDamping=true;controls.dampingFactor=.08;controls.minDistance=15;controls.maxDistance=75;controls.maxPolarAngle=Math.PI*.48;controls.minPolarAngle=.1;controls.enablePan=false;
     atmosphere=new Atmosphere(scene,renderer);sun=atmosphere.sun;hemi=atmosphere.hemi;
