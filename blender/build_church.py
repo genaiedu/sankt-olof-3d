@@ -436,7 +436,8 @@ collisions.append({'name':'Chorbogen · wandgebundene Gewölbekonsole','min':[7.
 # approximation from the aerial and opposing exterior views, not a measured plan.
 box('Chorboden',(12,0,-.05),(8,6,.1),floor)
 wall('Chor Süd','x',-3,8,16,6.0,[(10.1,1.55,1.7,4.8,False),(14.0,1.55,1.7,4.8,False)])
-wall('Chor Nord','x',3,8,16,6.0,[(12,1.3,2.1,4.8,False)])
+# Match the south wall: the central vault spring at x=12 lands on solid masonry.
+wall('Chor Nord','x',3,8,16,6.0,[(10.1,1.55,1.7,4.8,False),(14.0,1.55,1.7,4.8,False)])
 wall('Chor Ost','y',16,-3,3,6.0,[(2.1,1.2,0,2.3,True)])
 roof('Chordach',8,16,-3,3,6.0,9.6);gable(16,-3,3,6,10,False)
 for x in [10,14]:vault(x,0,2,3,3,3,True)

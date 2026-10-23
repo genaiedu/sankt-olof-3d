@@ -31,3 +31,17 @@ test('exactly 24 hours pass during both flights, ending at 05:00 the next day',(
   assert.deepEqual(flightClock('2026-12-31',FLIGHT_DURATION),{date:'2027-01-01',time:300});
   assert.deepEqual(flightClock('2026-12-31',FLIGHT_DURATION+10),{date:'2027-01-01',time:300});
 });
+
+test('both complete flight curves keep clear of tree crowns including projecting leaves',async()=>{
+  const {trees}=JSON.parse(await readFile(new URL('../public/assets/landscape.json',import.meta.url),'utf8'));
+  // Leaves extend beyond the crown's sampling ellipsoid. Add two metres for
+  // the leaf cards, wind, and a visible camera clearance; inspect the spline.
+  for(let t=0;t<=FLIGHT_DURATION;t+=.025){
+    const p=sampleFlight(t).position;
+    for(const tree of trees){
+      const horizontal=tree.radius+2,vertical=tree.radius*.8+2;
+      const distance=((p.x-tree.x)/horizontal)**2+((p.z+tree.y)/horizontal)**2+((p.y-tree.crownZ)/vertical)**2;
+      assert(distance>=1,`Flight intersects crown clearance at ${t.toFixed(3)} s, tree ${tree.seed}`);
+    }
+  }
+});

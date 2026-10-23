@@ -13,6 +13,14 @@ for(const [a,b] of [[[-13,0],[-9.3,0]],[[-9.3,0],[-9.3,3]],[[-9.3,3],[6,3]],[[6,
 assert.equal(pointBlocked(-10,2.8,boxes),true,'Altes seitlich versetztes Westportal ist nun eine geschlossene Wand');
 assert.equal(pointBlocked(-7,6,boxes),true,'Rücksprungwand ist keine offene frühere Vorhallentür');
 for(const [name,x,z] of [['Nordwand',5,-6],['Westwand',-10,-3],['Mittelpfeiler',-4,0],['Altar',14.45,0],['Banklehne',-8.87,4.6]])assert.equal(pointBlocked(x,z,boxes),true,name);
+// The chancel vault spring must meet masonry rather than cut through a window.
+for(const north of [-3,3]){
+  const solidAt=(x,z)=>raw.some(b=>[x,north,z].every((v,i)=>v>=b.min[i]&&v<=b.max[i]));
+  for(const z of [2.2,2.8,3.5]){
+    assert(solidAt(12,z),'Masonry below the central chancel vault spring');
+    for(const x of [10.1,14])assert(!solidAt(x,z),'Clear paired chancel window openings');
+  }
+}
 const glb=await readFile(new URL('../public/assets/sankt-olof.glb',import.meta.url));
 assert.equal(glb.readUInt32LE(0),0x46546c67);assert.equal(glb.readUInt32LE(4),2);assert.equal(glb.readUInt32LE(8),glb.length);assert(glb.length<8_000_000);
 const chunk=glb.readUInt32LE(12);const document=JSON.parse(glb.subarray(20,20+chunk).toString());

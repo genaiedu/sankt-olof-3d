@@ -23,12 +23,13 @@ const base = import.meta.env.BASE_URL;
 const asset = (name) => `${base}assets/${name}`;
 const root = document.documentElement;
 const saved = (() => { try { return JSON.parse(localStorage.getItem('sankt-olof-view') || '{}'); } catch { return {}; } })();
-const prefs = { palette: 'graphite', theme: 'light', quality: 'auto', softness: 1, date:'2026-09-22', time:saved.light==='warm'?1050:840, ...saved };
+const prefs = { palette: 'graphite', theme: 'light', quality: 'auto', date:'2026-09-22', time:saved.light==='warm'?1050:840, ...saved };
 const valid = { palette: ['graphite','atelier','slate','plum','bordeaux'], theme: ['light','dark'], quality: ['auto','high','low'] };
 for (const k of Object.keys(valid)) if (!valid[k].includes(prefs[k])) prefs[k] = valid[k][0];
 if(!/^20\d\d-\d\d-\d\d$/.test(prefs.date)||!Number.isFinite(Date.parse(prefs.date)))prefs.date='2026-09-22';
 if(!Number.isFinite(prefs.time))prefs.time=840;prefs.time=THREE.MathUtils.clamp(prefs.time,0,1439);delete prefs.flare;
-if(!Number.isFinite(prefs.softness))prefs.softness=1;prefs.softness=Math.round(THREE.MathUtils.clamp(prefs.softness,0,4)*100)/100;
+delete prefs.softness;
+const SOFTNESS_PX=1.5;
 function savePrefs() { try { localStorage.setItem('sankt-olof-view',JSON.stringify(prefs)); } catch {} }
 function applyReading() { root.dataset.palette=prefs.palette;root.dataset.theme=prefs.theme; }
 applyReading();
@@ -62,16 +63,6 @@ let playing=false,skyMinute=-1,turnVelocity=0,timeElapsed=0;
 let flightTime=0,flightPaused=true,flightStartDate=prefs.date;
 const keys=new Set();const pressedMoves=new Set();const windowLights=[],nightLights=[];let colliders=[];
 const viewport=$('viewport');const stage=document.querySelector('.stage');
-function applySoftness(){
-  const value=prefs.softness.toFixed(2);
-  $('softness').value=value;$('softness-value').value=`${value.replace('.',',')} px`;
-  $('softness').setAttribute('aria-valuetext',`${value.replace('.',',')} Pixel`);
-  viewport.dataset.softness=value;
-  if(soften){soften.enabled=prefs.softness>0;soften.uniforms.pixel.value.set(prefs.softness/Math.max(viewport.clientWidth,1),prefs.softness/Math.max(viewport.clientHeight,1));}
-}
-$('softness').addEventListener('input',e=>{prefs.softness=Number(e.target.value);applySoftness();savePrefs();});
-$('softness-reset').onclick=()=>{prefs.softness=.72;applySoftness();savePrefs();};
-applySoftness();
 const move=new THREE.Vector3();const target=new THREE.Vector3();
 const stations={
   overview:{label:'Außenansicht',pos:[-26,13,26],look:[1,5.4,0],tag:'Architektur',title:'Ein auffälliger Umriss.',text:'Weiße Wände, rote Dächer und gestufte Giebel prägen den heutigen Bau. Die ältesten Teile sind Chor und Sakristei.'},
@@ -114,7 +105,7 @@ function setInteriorLighting(inside) {
 function resize() {
   if(!renderer)return;
   const w=viewport.clientWidth,h=viewport.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/Math.max(h,1);camera.updateProjectionMatrix();
-  if(composer){composer.setPixelRatio(renderer.getPixelRatio());composer.setSize(w,h);ao.setSize(Math.round(w*renderer.getPixelRatio()*.75),Math.round(h*renderer.getPixelRatio()*.75));applySoftness();}
+  if(composer){composer.setPixelRatio(renderer.getPixelRatio());composer.setSize(w,h);ao.setSize(Math.round(w*renderer.getPixelRatio()*.75),Math.round(h*renderer.getPixelRatio()*.75));if(soften)soften.uniforms.pixel.value.set(SOFTNESS_PX/Math.max(w,1),SOFTNESS_PX/Math.max(h,1));}
   fitFlightText();
 }
 function fitFlightText(){const el=$('flight-text');el.style.fontSize='';const width=el.clientWidth;if(width&&el.scrollWidth>width)el.style.fontSize=`${Math.max(12,parseFloat(getComputedStyle(el).fontSize)*width/el.scrollWidth*.97)}px`;}
