@@ -17,6 +17,7 @@ import { Vegetation } from './vegetation.js';
 import { clockText, nextDate, solarEvents, steeringStep } from './daylight.js';
 import { sampleFlight, flightCaption, flightClock, FLIGHT_DURATION } from './flight.js';
 import { setupPhotos } from './photos.js';
+import { blendInterior, interiorLightValues } from './interior-lighting.js';
 
 const $ = (id) => document.getElementById(id);
 const base = import.meta.env.BASE_URL;
@@ -59,7 +60,7 @@ async function goPhotos(){
 
 let renderer,scene,camera,controls,model,sun,hemi,pmrem,clock,composer,ao,bloom,soften,atmosphere,vegetation;
 let ready=false,mode='orbit',place='overview',yaw=0,pitch=0,indoors=false,frameCount=0,lastStats=0;
-let playing=false,skyMinute=-1,turnVelocity=0,timeElapsed=0;
+let playing=false,skyMinute=-1,turnVelocity=0,timeElapsed=0,interiorBlend=0;
 let flightTime=0,flightPaused=true,flightStartDate=prefs.date;
 const keys=new Set();const pressedMoves=new Set();const windowLights=[],nightLights=[];let colliders=[];
 const viewport=$('viewport');const stage=document.querySelector('.stage');
@@ -94,13 +95,18 @@ function applyLight() {
   const phase=values.sun.altitude>.09?'Tag':values.sun.altitude>-.10?'Dämmerung':'Nacht';
   $('light-phase').textContent=phase;viewport.dataset.solarAltitude=(values.sun.altitude*180/Math.PI).toFixed(2);viewport.dataset.sunDirection=atmosphere.sunDirection.toArray().join(',');viewport.dataset.moonDirection=atmosphere.moonDirection.toArray().join(',');viewport.dataset.moonAltitude=(values.moon.altitude*180/Math.PI).toFixed(2);viewport.dataset.clock=clockText(prefs.time);
   $('moon-info').textContent=`Mond: ${Math.round(values.illumination.fraction*100)} % beleuchtet · ${values.moon.altitude>0?'über':'unter'} dem Horizont`;
-  setInteriorLighting(indoors);
-}
-function setInteriorLighting(inside) {
-  indoors=inside;if(!atmosphere)return;atmosphere.applyInterior(inside);
-  for(const l of windowLights)l.intensity=l.userData.candle?(4+(1-atmosphere.day)*9):(inside?l.userData.strength*atmosphere.day:0);
+  applyInteriorLighting();
   for(const l of nightLights){l.intensity=l.userData.strength*(1-atmosphere.day);l.visible=l.intensity>.01;}
   model?.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material]){if(m.name.includes('Kerzenflamme'))m.emissiveIntensity=1.5+(1-atmosphere.day)*2;if(m.name.includes('Fensterglas')){m.emissive.set('#ffd5a1');m.emissiveIntensity=(1-atmosphere.day)*.48;}}});
+}
+function setInteriorLighting(inside) { indoors=inside; }
+function applyInteriorLighting() {
+  if(!atmosphere)return;
+  atmosphere.applyInterior(interiorBlend);
+  const light=interiorLightValues(atmosphere.day,interiorBlend);
+  for(const l of windowLights)l.intensity=l.userData.candle?(4+(1-atmosphere.day)*9):l.userData.strength*light.window;
+  viewport.dataset.interiorBlend=interiorBlend.toFixed(5);
+  viewport.dataset.exposure=light.exposure.toFixed(5);
 }
 function resize() {
   if(!renderer)return;
@@ -213,6 +219,7 @@ function loop(){
     if(timeElapsed>3){savePrefs();timeElapsed=0;}
   }
   if(ready){if(mode==='walk')stepWalk(dt);else if(mode==='flight')updateFlight(elapsed);else controls.update();updateMap();}
+  if(ready){interiorBlend=blendInterior(interiorBlend,indoors,elapsed);applyInteriorLighting();}
   const motion=matchMedia('(prefers-reduced-motion:reduce)').matches?0:dt;
   atmosphere?.tick(motion,camera);vegetation?.tick(motion);
   if(composer)composer.render();else renderer.render(scene,camera);frameCount++;

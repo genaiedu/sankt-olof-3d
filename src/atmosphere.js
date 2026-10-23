@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { celestial, celestialDirection } from './daylight.js';
+import { interiorLightValues } from './interior-lighting.js';
 
 const smooth=(a,b,v)=>THREE.MathUtils.smoothstep(v,a,b);
 const vertex=`varying vec3 worldNormal;varying vec2 texUV;void main(){texUV=uv;worldNormal=normalize(mat3(modelMatrix)*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
@@ -65,11 +66,11 @@ export class Atmosphere {
     return v;
   }
   applyInterior(inside) {
-    this.inside=inside;const d=this.day;
-    this.scene.environmentIntensity=inside?.025+d*.13:.025+d*.65;
-    this.hemi.intensity=inside?.12+d*.48:.11+d*1.05;
+    this.inside=inside;const d=this.day,light=interiorLightValues(d,Number(inside));
+    this.scene.environmentIntensity=light.environment;
+    this.hemi.intensity=light.hemisphere;
     this.hemi.color.set('#91b6d7').lerp(new THREE.Color('#d4e6f3'),d);this.hemi.groundColor.set('#1b2430').lerp(new THREE.Color('#6f7053'),d);
-    this.renderer.toneMappingExposure=inside?1.18:1.02+(1-d)*.5;
+    this.renderer.toneMappingExposure=light.exposure;
   }
   tick(dt,camera) {
     this.elapsed+=dt;this.sky.position.copy(camera.position);this.sky.material.uniforms.cloudTime.value=this.elapsed;
